@@ -17,6 +17,12 @@ Installing as a plugin brings the activation hook with it, so there's nothing to
 
 That's the whole setup. The hook is registered by the plugin, and uninstalling removes it again.
 
+The same marketplace also carries [Verified Math](plugins/verified-math), a separate plugin described below:
+
+```
+/plugin install verified-math@claudeception
+```
+
 ### As a skill
 
 If you'd rather not use the plugin system, clone the skill directly:
@@ -182,6 +188,25 @@ See `examples/` for sample skills:
 - `nextjs-server-side-error-debugging/`: errors that don't show in browser console
 - `prisma-connection-pool-exhaustion/`: the "too many connections" serverless problem
 - `typescript-circular-dependency/`: detecting and fixing import cycles
+
+## Verified Math
+
+A second plugin in this marketplace, aimed at a different failure mode.
+
+Model arithmetic fails quietly. Not on the hard parts, where the difficulty is visible and care gets applied, but on a carried digit, a percentage taken of the wrong base, a unit left unconverted. The answer comes out plausible, and plausible survives review.
+
+The skill's rule is that no computed number gets stated unless code produced it, and `scripts/calc.py` backs that up by checking every result a second way that shares no code path with the first:
+
+```bash
+calc.py eval  "2**100 / 3"                  # exact rational plus decimal expansion
+calc.py check "(x+1)**2 == x**2 + 1"        # symbolic proof and random sampling
+calc.py solve "x**5 - x - 1 = 0"            # every root back-substituted
+calc.py integ "exp(-x**2)" --from=-oo --to=oo   # symbolic result vs quadrature
+```
+
+Exit code `0` means verified, `1` means the claim is false or the two methods disagreed. Requires `pip install sympy mpmath`; NumPy and SciPy are worth having for numerics.
+
+The test suite is built from cases that break a naive implementation: `atan(1)+atan(2)+atan(3) == pi` is true but `simplify()` cannot reduce it, so treating "did not simplify" as a disproof reports a true identity as false. `exp(pi*sqrt(163))` matches an integer to about 30 significant figures without being that integer. `x**2 > 0` fails only at zero, which random sampling never lands on. Each of those caught a real bug during development.
 
 ## Contributing
 

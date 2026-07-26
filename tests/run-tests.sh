@@ -36,7 +36,8 @@ hook() {
 }
 
 echo "== manifests =="
-for manifest in .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json; do
+for manifest in .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json \
+                plugins/verified-math/.claude-plugin/plugin.json; do
   if python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$REPO_ROOT/$manifest" 2>/dev/null; then
     ok "$manifest is valid JSON"
   else
@@ -74,6 +75,26 @@ for matchers in cfg.get('hooks', {}).values():
         for h in matcher.get('hooks', []):
             if h.get('command'):
                 print(h['command'])
+")
+
+# Every plugin the marketplace advertises must actually exist at its source
+# path, or the entry 404s at install time rather than at review time.
+while IFS= read -r entry; do
+  [ -n "$entry" ] || continue
+  name="${entry%%|*}"
+  source_path="${entry#*|}"
+  if [ -d "$REPO_ROOT/${source_path#./}" ]; then
+    ok "marketplace entry '$name' resolves to $source_path"
+  else
+    no "marketplace entry '$name' resolves" "no directory at $source_path"
+  fi
+done < <(python3 -c "
+import json
+cfg = json.load(open('$REPO_ROOT/.claude-plugin/marketplace.json'))
+for p in cfg.get('plugins', []):
+    src = p.get('source')
+    if isinstance(src, str):
+        print(f\"{p['name']}|{src}\")
 ")
 
 echo "== activator: SessionStart =="

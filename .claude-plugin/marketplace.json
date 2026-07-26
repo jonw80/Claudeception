@@ -19,6 +19,20 @@
         "retrospective",
         "memory"
       ]
+    },
+    {
+      "name": "verified-math",
+      "source": "./plugins/verified-math",
+      "displayName": "Verified Math",
+      "description": "Computes mathematics by executing it rather than doing it mentally, then verifies the result by a second, independent method.",
+      "category": "productivity",
+      "tags": [
+        "math",
+        "symbolic",
+        "sympy",
+        "verification",
+        "numerics"
+      ]
     }
   ]
 }

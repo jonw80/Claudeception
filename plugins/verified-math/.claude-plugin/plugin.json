@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "verified-math",
+  "displayName": "Verified Math",
+  "version": "1.0.0",
+  "description": "Compute mathematics by executing it rather than doing it mentally, then verify the result by a second, independent method. Ships a compute-and-verify CLI built on SymPy and mpmath.",
+  "author": {
+    "name": "Claudeception contributors",
+    "url": "https://github.com/jonw80/Claudeception"
+  },
+  "homepage": "https://github.com/jonw80/Claudeception/tree/main/plugins/math",
+  "repository": "https://github.com/jonw80/Claudeception",
+  "license": "MIT",
+  "keywords": [
+    "math",
+    "symbolic",
+    "sympy",
+    "arbitrary-precision",
+    "verification",
+    "numerics"
+  ]
+}
