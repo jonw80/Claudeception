@@ -33,6 +33,20 @@
         "verification",
         "numerics"
       ]
+    },
+    {
+      "name": "quantum-memory",
+      "source": "./plugins/quantum-memory",
+      "displayName": "Quantum Memory",
+      "description": "Associative memory that recalls a whole pattern from a noisy or partial cue, via phase-encoded quantum state simulation or Hopfield attractor dynamics.",
+      "category": "productivity",
+      "tags": [
+        "associative-memory",
+        "hopfield",
+        "attractor-network",
+        "quantum-simulation",
+        "pattern-completion"
+      ]
     }
   ]
 }

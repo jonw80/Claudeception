@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "quantum-memory",
+  "displayName": "Quantum Memory",
+  "version": "1.0.0",
+  "description": "Quantum-inspired associative memory that recalls a whole pattern from a noisy or partial cue, via phase-encoded state simulation or Hopfield attractor dynamics, benchmarked against the optimal classical decoder.",
+  "author": {
+    "name": "Claudeception contributors",
+    "url": "https://github.com/jonw80/Claudeception"
+  },
+  "homepage": "https://github.com/jonw80/Claudeception/tree/main/plugins/quantum-memory",
+  "repository": "https://github.com/jonw80/Claudeception",
+  "license": "MIT",
+  "keywords": [
+    "associative-memory",
+    "hopfield",
+    "attractor-network",
+    "quantum-simulation",
+    "pattern-completion",
+    "content-addressable"
+  ]
+}

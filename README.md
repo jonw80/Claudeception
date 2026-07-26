@@ -208,6 +208,23 @@ Exit code `0` means verified, `1` means the claim is false or the two methods di
 
 The test suite is built from cases that break a naive implementation: `atan(1)+atan(2)+atan(3) == pi` is true but `simplify()` cannot reduce it, so treating "did not simplify" as a disproof reports a true identity as false. `exp(pi*sqrt(163))` matches an integer to about 30 significant figures without being that integer. `x**2 > 0` fails only at zero, which random sampling never lands on. Each of those caught a real bug during development.
 
+## Quantum Memory
+
+A third plugin: associative memory that recalls a whole pattern from a noisy or partial cue, either by phase-encoded quantum state simulation or by Hopfield attractor dynamics.
+
+```bash
+qamn.py demo         # recall from 20% noise, then from half a pattern
+qamn.py benchmark    # accuracy against the optimal classical decoder
+qamn.py capacity --qubits 64
+qamn.py phases       # what the phase constant actually changes
+```
+
+The governing result is that phase-encoding fidelity has an exact closed form, `cos²(π·c/2) ^ hamming_distance`, verified against the simulator to nine decimal places. Because that is strictly decreasing in distance, ranking by fidelity and ranking by Hamming distance give the same order — so quantum recall *cannot* beat nearest-neighbour matching, which is already the optimal decoder on a symmetric noise channel. Matching it is the target; beating it would mean the measurement is wrong. It matches, at 85.2% against 85.2% on noisy queries and 96.4% against 96.4% on fragments.
+
+This was adapted from an existing QAMN implementation whose gate simulation was sound but whose memory layer was not. Four defects are fixed and covered by regression tests: `cnot` double-swapped every pair and was a no-op, so no entanglement was possible at all; the entanglement network was applied to queries but not to stored patterns, costing 15 points of accuracy; `check_stability` returned `fidelity(state, state)`, which is 1.0 by definition; and `capacity` floored to 1 for every network below 17 units, reporting capacity 1 while the demo stored 4 patterns.
+
+Requires `pip install numpy`.
+
 ## Contributing
 
 Contributions welcome. Fork, make changes, submit a PR.

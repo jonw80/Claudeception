@@ -37,7 +37,8 @@ hook() {
 
 echo "== manifests =="
 for manifest in .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json \
-                plugins/verified-math/.claude-plugin/plugin.json; do
+                plugins/verified-math/.claude-plugin/plugin.json \
+                plugins/quantum-memory/.claude-plugin/plugin.json; do
   if python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$REPO_ROOT/$manifest" 2>/dev/null; then
     ok "$manifest is valid JSON"
   else

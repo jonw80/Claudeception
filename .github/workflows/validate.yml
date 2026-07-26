@@ -16,15 +16,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install math dependencies
-        run: pip install --quiet sympy mpmath
+      - name: Install plugin dependencies
+        run: pip install --quiet sympy mpmath numpy
 
       - name: Check scripts are executable
         run: |
           missing=0
           for script in scripts/claudeception-activator.sh scripts/skill-inventory.sh \
                         scripts/validate-skill.py tests/run-tests.sh tests/test-calc.sh \
-                        plugins/verified-math/scripts/calc.py; do
+                        tests/test-qamn.sh plugins/verified-math/scripts/calc.py \
+                        plugins/quantum-memory/scripts/qamn.py; do
             if [ ! -x "$script" ]; then
               echo "::error file=$script::not executable; run chmod +x $script"
               missing=1
@@ -42,6 +43,9 @@ jobs:
 
       - name: Run calc.py test suite
         run: ./tests/test-calc.sh
+
+      - name: Run qamn.py test suite
+        run: ./tests/test-qamn.sh
 
       - name: Validate extracted skills
         # Strict here: SKILL.md and examples/ define the problem/solution/
