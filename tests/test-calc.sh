@@ -70,6 +70,28 @@ claim_is 1 "exp(pi*sqrt(163)) == 262537412640768744"
 # fails only at x=0, which random sampling never hits
 claim_is 1 "x**2 > 0"
 
+echo "== check: simplify() is audited, not trusted =="
+# sympy's simplify() is not value-preserving on small Floats: it returns
+# exactly 0 for 1.380649e-23*300*log(2) (the Landauer limit at 300K, ~2.87e-21).
+# Taking that at face value made check() report this false claim as TRUE, and
+# the dual-method cross-check could not catch it because both methods ran on
+# the already-corrupted expression.
+claim_is 1 "1.380649e-23 * 300 * log(2) == 0"
+claim_is 1 "1e-25 * pi == 0"
+claim_is 0 "1.380649e-23 * 300 * log(2) > 0"
+
+OUT="$(timeout 60 python3 "$CALC" eval "1.380649e-23 * 300 * log(2)" --digits 4 --json 2>&1)"
+if printf '%s' "$OUT" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+assert 'simplify_unsafe' in d, 'lossy simplify was not flagged'
+assert d['decimal'].startswith('2.871e-21'), d['decimal']
+" 2>/dev/null; then
+  ok "eval reports the true value and flags the lossy simplify"
+else
+  no "eval reports the true value and flags the lossy simplify" "$(printf '%s' "$OUT" | tail -4)"
+fi
+
 echo "== check: counterexamples are reported =="
 OUT="$(timeout 60 python3 "$CALC" check "x**2 > 0" --json 2>&1)"
 if printf '%s' "$OUT" | python3 -c "

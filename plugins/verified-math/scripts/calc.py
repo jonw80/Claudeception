@@ -57,6 +57,23 @@ def close(a, b, tol=1e-18):
     return abs(a - b) <= tol * scale
 
 
+def _numerically_zero(expr, digits=60):
+    """Is this expression actually zero, judged from the untransformed form?
+
+    Returns True, False, or None when it cannot be decided. Used to audit
+    simplify(), which is not value-preserving on small Floats.
+    """
+    if expr.free_symbols:
+        return None
+    try:
+        value = sp.N(expr, digits)
+        if value.free_symbols:
+            return None
+        return abs(complex(value)) < 10 ** (-(digits // 2))
+    except (TypeError, ValueError, ArithmeticError):
+        return None
+
+
 def parse(expr, label="expression"):
     try:
         return sp.sympify(expr)
@@ -98,6 +115,21 @@ def cmd_eval(args):
     out = {"input": args.expression}
 
     exact = sp.simplify(expr)
+
+    # Audit simplify() before trusting its output as the value. It is not
+    # value-preserving on small Floats -- it returns exactly 0 for
+    # 1.380649e-23*300*log(2) -- and reporting that as the answer is precisely
+    # the silent wrong number this tool exists to prevent. Numbers below are
+    # therefore evaluated from the original expression, never the simplified one.
+    if not expr.free_symbols and not exact.free_symbols:
+        original_zero = _numerically_zero(expr)
+        simplified_zero = _numerically_zero(exact)
+        if original_zero is not None and original_zero != simplified_zero:
+            out["simplify_unsafe"] = (
+                f"simplify() returned {exact}, which does not match the value of "
+                "the original expression; showing the original form instead")
+            exact = expr
+
     out["exact"] = str(exact)
 
     if exact.free_symbols:
@@ -107,10 +139,11 @@ def cmd_eval(args):
 
     mp.mp.dps = args.digits + 10
     try:
-        # Two independent evaluators: SymPy's evalf and mpmath's own.
-        primary = sp.N(exact, args.digits + 5)
-        secondary = mp.mpmathify(sp.sstr(sp.N(exact, args.digits + 15)))
-        out["decimal"] = sp.sstr(sp.N(exact, args.digits))
+        # Two independent evaluators: SymPy's evalf and mpmath's own. Both read
+        # the original expression, so neither inherits a simplify() artefact.
+        primary = sp.N(expr, args.digits + 5)
+        secondary = mp.mpmathify(sp.sstr(sp.N(expr, args.digits + 15)))
+        out["decimal"] = sp.sstr(sp.N(expr, args.digits))
         agree = close(mp.mpf(str(primary)), secondary, mp.mpf(10) ** (-args.digits))
         out["verified"] = bool(agree)
         if not agree:
@@ -157,11 +190,17 @@ def symbolic_verdict(lhs, rhs, op):
     falls through to sampling, which can produce an actual counterexample.
     """
     if op in ("==", "!="):
-        diff = sp.simplify(lhs - rhs)
+        raw_diff = lhs - rhs
+        diff = sp.simplify(raw_diff)
         equal = None
 
         if diff == 0 or diff.is_zero is True:
-            equal = True
+            # simplify() saying zero is a claim, not a measurement. On small
+            # Floats it can collapse a genuinely nonzero value: simplify() of
+            # 1.380649e-23*300*log(2) returns exactly 0, and every downstream
+            # check then agrees with it because they all see the same corrupted
+            # expression. Confirm against the untransformed difference.
+            equal = _numerically_zero(raw_diff)
         else:
             # A second reduction route before giving up on proving equality.
             harder = sp.simplify(sp.expand(sp.trigsimp(diff)))
