@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "claudeception",
+  "displayName": "Claudeception",
+  "version": "3.1.0",
+  "description": "Continuous learning for Claude Code. Extracts reusable knowledge from work sessions and writes it back as new skills, so a hard-won debugging discovery is available the next time it matters.",
+  "author": {
+    "name": "Claudeception contributors",
+    "url": "https://github.com/jonw80/Claudeception"
+  },
+  "homepage": "https://github.com/jonw80/Claudeception#readme",
+  "repository": "https://github.com/jonw80/Claudeception",
+  "license": "MIT",
+  "keywords": [
+    "continuous-learning",
+    "skill-extraction",
+    "meta-skill",
+    "retrospective",
+    "self-improvement",
+    "memory"
+  ],
+  "hooks": "./hooks/hooks.json"
+}

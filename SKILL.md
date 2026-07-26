@@ -7,7 +7,7 @@ description: |
   non-obvious debugging, workarounds, or trial-and-error discovery. Creates new Claude Code
   skills when valuable, reusable knowledge is identified.
 author: Claude Code
-version: 3.0.0
+version: 3.1.0
 allowed-tools:
   - Read
   - Write
@@ -19,6 +19,8 @@ allowed-tools:
   - Skill
   - AskUserQuestion
   - TodoWrite
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/skill-inventory.sh *)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/validate-skill.py *)
 ---
 
 # Claudeception
@@ -71,7 +73,32 @@ Analyze what was learned:
 - What would someone need to know to solve this faster next time?
 - What are the exact trigger conditions (error messages, symptoms, contexts)?
 
-### Step 2: Research Best Practices (When Appropriate)
+### Step 2: Check Whether the Skill Already Exists
+
+Before writing anything, look at what is already installed:
+
+```bash
+${CLAUDE_SKILL_DIR}/scripts/skill-inventory.sh [search terms]
+```
+
+Pass the technology, error string, or symptom you are about to write about.
+The script lists matching skills across project, user, and plugin scopes with
+their descriptions.
+
+Then decide:
+
+- **A close match exists**: update that skill instead. Add the new trigger
+  condition to its description, or add the new case to its Solution section.
+  A skill that covers three related failures is more useful than three skills
+  that each cover one and compete for the same match.
+- **A related but distinct skill exists**: write the new skill and cross-
+  reference both, so whichever one matches first points at the other.
+- **Nothing matches**: continue to the next step.
+
+Skipping this check is how a library ends up with four overlapping skills for
+the same problem, none of which reliably wins the match.
+
+### Step 3: Research Best Practices (When Appropriate)
 
 Before creating the skill, search the web for current information when:
 
@@ -115,7 +142,7 @@ Before creating the skill, search the web for current information when:
 - Include warnings about deprecated patterns in the "Notes" section
 - Mention official recommendations where applicable
 
-### Step 3: Structure the Skill
+### Step 4: Structure the Skill
 
 Create a new skill with this structure:
 
@@ -126,6 +153,10 @@ description: |
   [Precise description including: (1) exact use cases, (2) trigger conditions like 
   specific error messages or symptoms, (3) what problem this solves. Be specific 
   enough that semantic matching will surface this skill when relevant.]
+when_to_use: |
+  [Optional. Extra trigger phrases and example requests that should surface this
+  skill. Use it to keep the description readable while still covering the many
+  ways someone might phrase the same problem.]
 author: [original-author or "Claude Code"]
 version: 1.0.0
 date: [YYYY-MM-DD]
@@ -155,7 +186,7 @@ date: [YYYY-MM-DD]
 [Optional: Links to official documentation, articles, or resources that informed this skill]
 ```
 
-### Step 4: Write Effective Descriptions
+### Step 5: Write Effective Descriptions
 
 The description field is critical for skill discovery. Include:
 
@@ -173,7 +204,15 @@ description: |
   Turborepo, and npm workspaces.
 ```
 
-### Step 5: Save the Skill
+Two constraints worth knowing:
+
+- `description` and `when_to_use` are concatenated in the skill listing and
+  truncated together at 1,536 characters. Lead with the primary trigger, since
+  anything past the cutoff never participates in matching.
+- Angle brackets in a description are rejected when a skill is uploaded to
+  claude.ai. Write `getServerSideProps` rather than `<Component>` placeholders.
+
+### Step 6: Save the Skill
 
 Save new skills to the appropriate location:
 
@@ -182,6 +221,23 @@ Save new skills to the appropriate location:
 
 Include any supporting scripts in a `scripts/` subdirectory if the skill benefits from 
 executable helpers.
+
+### Step 7: Validate Before Finishing
+
+Run the validator on the file you just wrote:
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/validate-skill.py path/to/SKILL.md
+```
+
+It checks the failures that are invisible until the skill silently fails to
+load or never matches: unparseable frontmatter, a name Claude Code rejects, a
+description over the listing budget or with no trigger condition in it, missing
+sections, and credentials that should not have been written down.
+
+Fix every error. Warnings are judgement calls, but a description flagged for
+having no trigger condition is usually a real problem: that skill will sit in
+the library and never surface. Report the result rather than assuming it passed.
 
 ## Retrospective Mode
 
@@ -211,7 +267,7 @@ When extracting skills, also consider:
    whether they belong in one comprehensive skill or separate focused skills.
 
 2. **Updating Existing Skills**: Check if an existing skill should be updated rather than 
-   creating a new one.
+   creating a new one. `scripts/skill-inventory.sh` answers this; see Step 2.
 
 3. **Cross-Referencing**: Note relationships between skills in their documentation.
 
@@ -224,10 +280,13 @@ Before finalizing a skill, verify:
 - [ ] Content is specific enough to be actionable
 - [ ] Content is general enough to be reusable
 - [ ] No sensitive information (credentials, internal URLs) is included
+- [ ] `skill-inventory.sh` was checked, and this is genuinely new rather than an
+      update to an existing skill
 - [ ] Skill doesn't duplicate existing documentation or skills
 - [ ] Web research conducted when appropriate (for technology-specific topics)
 - [ ] References section included if web sources were consulted
 - [ ] Current best practices (post-2025) incorporated when relevant
+- [ ] `validate-skill.py` passes with no errors
 
 ## Anti-Patterns to Avoid
 
@@ -257,13 +316,17 @@ in the terminal.
 - Non-obvious aspect: Expected behavior for server-side code in Next.js
 - Trigger: Generic error page with empty browser console
 
-**Step 2 - Research Best Practices**:
+**Step 2 - Check Whether the Skill Already Exists**:
+`scripts/skill-inventory.sh nextjs server-side error` returns nothing, so this
+is new rather than an update to an existing skill.
+
+**Step 3 - Research Best Practices**:
 Search: "Next.js getServerSideProps error handling best practices 2026"
 - Found official docs on error handling
 - Discovered recommended patterns for try-catch in data fetching
 - Learned about error boundaries for server components
 
-**Step 3-5 - Structure and Save**:
+**Steps 4-7 - Structure, Save, and Validate**:
 
 **Extraction**:
 

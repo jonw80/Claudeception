@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "claudeception",
+  "description": "Claudeception and related continuous-learning tooling for Claude Code.",
+  "owner": {
+    "name": "jonw80",
+    "url": "https://github.com/jonw80"
+  },
+  "plugins": [
+    {
+      "name": "claudeception",
+      "source": "./",
+      "displayName": "Claudeception",
+      "description": "Extracts reusable knowledge from work sessions and writes it back as new Claude Code skills.",
+      "category": "productivity",
+      "tags": [
+        "continuous-learning",
+        "skill-extraction",
+        "retrospective",
+        "memory"
+      ]
+    }
+  ]
+}

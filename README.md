@@ -6,45 +6,50 @@ This skill fixes that. When Claude Code discovers something non-obvious (a debug
 
 ## Installation
 
-### Step 1: Clone the skill
+### As a plugin (recommended)
 
-**User-level (recommended)**
+Installing as a plugin brings the activation hook with it, so there's nothing to copy and no settings file to edit:
 
-```bash
-git clone https://github.com/blader/Claudeception.git ~/.claude/skills/claudeception
+```
+/plugin marketplace add jonw80/Claudeception
+/plugin install claudeception@claudeception
 ```
 
-**Project-level**
+That's the whole setup. The hook is registered by the plugin, and uninstalling removes it again.
+
+### As a skill
+
+If you'd rather not use the plugin system, clone the skill directly:
 
 ```bash
-git clone https://github.com/blader/Claudeception.git .claude/skills/claudeception
+# User-level
+git clone https://github.com/jonw80/Claudeception.git ~/.claude/skills/claudeception
+
+# or project-level
+git clone https://github.com/jonw80/Claudeception.git .claude/skills/claudeception
 ```
 
-### Step 2: Set up the activation hook (recommended)
-
-The skill can activate via semantic matching, but a hook ensures it evaluates every session for extractable knowledge.
-
-#### User-level setup (recommended)
-
-1. Create the hooks directory and copy the script:
-
-```bash
-mkdir -p ~/.claude/hooks
-cp ~/.claude/skills/claudeception/scripts/claudeception-activator.sh ~/.claude/hooks/
-chmod +x ~/.claude/hooks/claudeception-activator.sh
-```
-
-2. Add the hook to your global Claude settings (`~/.claude/settings.json`):
+The skill will activate on semantic matching alone, but the hook makes it far more reliable. To wire it up manually, point your settings at the script where you cloned it (`~/.claude/settings.json` for user-level, `.claude/settings.json` for a single project):
 
 ```json
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/skills/claudeception/scripts/claudeception-activator.sh"
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/claudeception-activator.sh"
+            "command": "~/.claude/skills/claudeception/scripts/claudeception-activator.sh"
           }
         ]
       }
@@ -53,38 +58,18 @@ chmod +x ~/.claude/hooks/claudeception-activator.sh
 }
 ```
 
-#### Project-level setup
+If you already have a `settings.json`, merge the `hooks` block into it. One script handles both events and decides what to send based on which one fired.
 
-1. Create the hooks directory inside your project and copy the script:
+### How the hook behaves
 
-```bash
-mkdir -p .claude/hooks
-cp .claude/skills/claudeception/scripts/claudeception-activator.sh .claude/hooks/
-chmod +x .claude/hooks/claudeception-activator.sh
-```
+`SessionStart` injects the evaluation criteria once, at the top of the session. `UserPromptSubmit` then stays quiet and re-sends a one-line reminder only every tenth prompt, which keeps the reminder alive through a long session without paying for it on every turn.
 
-2. Add the hook to your project settings (`.claude/settings.json` in the repo):
+Two environment variables adjust this:
 
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/claudeception-activator.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-If you already have a `settings.json`, merge the `hooks` configuration into it.
-
-The hook injects a reminder on every prompt that tells Claude to evaluate whether the current task produced extractable knowledge. This achieves higher activation rates than relying on semantic description matching alone.The hook injects a reminder on every prompt that tells Claude to evaluate whether the current task produced extractable knowledge. This achieves higher activation rates than relying on semantic description matching alone.
+| Variable | Effect |
+| --- | --- |
+| `CLAUDECEPTION_REMIND_EVERY` | Prompts between reminders. Default `10`; set `0` to send none. |
+| `CLAUDECEPTION_DISABLE` | Set to `1` to silence the hook without unwiring it. |
 
 ## Usage
 
@@ -166,9 +151,29 @@ date: 2024-01-15
 
 See `resources/skill-template.md` for the full template.
 
+Skills follow the [Agent Skills](https://agentskills.io) open standard, so an extracted skill isn't locked to Claude Code.
+
 ## Quality Gates
 
 The skill is picky about what it extracts. If something is just a documentation lookup, or only useful for this one case, or hasn't actually been tested, it won't create a skill. Would this actually help someone who hits this problem in six months? If not, no skill.
+
+Two scripts back this up, and Claude runs them as part of extraction. You can also run them yourself.
+
+**Before writing**, check whether the knowledge belongs in a skill that already exists:
+
+```bash
+scripts/skill-inventory.sh prisma connection pool
+```
+
+It lists matching skills across project, user, and plugin scopes. A skill covering three related failures beats three skills competing for the same match.
+
+**After writing**, validate the file:
+
+```bash
+python3 scripts/validate-skill.py ~/.claude/skills/my-new-skill/SKILL.md
+```
+
+This catches the problems you'd otherwise only notice as silence: frontmatter that won't parse, a name Claude Code rejects, a description past the 1,536-character listing budget or with no trigger condition in it, missing sections, and credentials that shouldn't have been written down. Add `--strict` to fail on warnings too.
 
 ## Examples
 
@@ -181,6 +186,16 @@ See `examples/` for sample skills:
 ## Contributing
 
 Contributions welcome. Fork, make changes, submit a PR.
+
+Before opening one, run:
+
+```bash
+./tests/run-tests.sh
+python3 scripts/validate-skill.py --strict SKILL.md examples/
+shellcheck scripts/*.sh tests/*.sh
+```
+
+CI runs the same three checks on every push.
 
 ## License
 

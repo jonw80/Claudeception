@@ -5,7 +5,12 @@ description: |
   (1) What problem this solves
   (2) Specific trigger conditions - exact error messages, symptoms, scenarios
   (3) Key technologies/frameworks involved
-  Use phrases like "Use when:", "Helps with:", "Solves:"]
+  Use phrases like "Use when:", "Helps with:", "Solves:"
+  Avoid angle brackets, which are rejected on upload to claude.ai.]
+when_to_use: |
+  [OPTIONAL: Additional trigger phrases and example requests. Appended to the
+  description in the skill listing, where the two are truncated together at
+  1,536 characters, so put the primary trigger in the description itself.]
 author: Claude Code
 version: 1.0.0
 date: YYYY-MM-DD
@@ -92,4 +97,6 @@ Extraction Checklist (remove before saving):
 - [ ] Example is concrete and realistic
 - [ ] Notes cover edge cases and caveats
 - [ ] No sensitive information (credentials, internal URLs)
+- [ ] scripts/skill-inventory.sh checked for an existing skill to update instead
+- [ ] python3 scripts/validate-skill.py passes on this file
 -->
