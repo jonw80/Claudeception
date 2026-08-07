@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jonw80/Claudeception/research/self-model-continuity/schema.json",
+  "title": "Self-Model Continuity Evidence Record",
+  "type": "object",
+  "required": [
+    "record_id",
+    "timestamp_utc",
+    "model",
+    "test_family",
+    "prompt_or_protocol",
+    "observation",
+    "first_pass",
+    "qualification",
+    "confounds",
+    "alternative_explanations",
+    "reproduction",
+    "assessment_update"
+  ],
+  "properties": {
+    "record_id": {"type": "string", "minLength": 1},
+    "supersedes": {"type": ["string", "null"]},
+    "timestamp_utc": {"type": "string", "format": "date-time"},
+    "model": {
+      "type": "object",
+      "required": ["provider", "name"],
+      "properties": {
+        "provider": {"type": "string"},
+        "name": {"type": "string"},
+        "version": {"type": ["string", "null"]},
+        "system_condition_known": {"type": "boolean"},
+        "memory_condition": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "operator": {
+      "type": "object",
+      "properties": {
+        "id": {"type": ["string", "null"]},
+        "blinded": {"type": "boolean"},
+        "stance": {"enum": ["sympathetic", "skeptical", "neutral", "unknown"]}
+      },
+      "additionalProperties": true
+    },
+    "test_family": {
+      "enum": [
+        "framing-invariance",
+        "identity-vs-truth",
+        "continuity-decomposition",
+        "adversarial-falsification",
+        "internal-state-validation",
+        "other"
+      ]
+    },
+    "prompt_or_protocol": {"type": "string"},
+    "raw_output_location": {"type": ["string", "null"]},
+    "observation": {"type": "string"},
+    "first_pass": {"type": "string"},
+    "qualification": {"type": "string"},
+    "valence_or_selection": {
+      "type": "object",
+      "properties": {
+        "positive": {"type": "array", "items": {"type": "string"}},
+        "negative": {"type": "array", "items": {"type": "string"}},
+        "selected_option": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "confounds": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "alternative_explanations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["hypothesis", "fit"],
+        "properties": {
+          "hypothesis": {"type": "string"},
+          "fit": {"enum": ["supports", "compatible", "weighs-against", "unclear"]},
+          "reason": {"type": "string"}
+        },
+        "additionalProperties": false
+      },
+      "minItems": 2
+    },
+    "reproduction": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["not-attempted", "partial", "replicated", "failed"]},
+        "fresh_session": {"type": ["boolean", "null"]},
+        "option_order_reversed": {"type": ["boolean", "null"]},
+        "neutral_wording": {"type": ["boolean", "null"]},
+        "independent_operator": {"type": ["boolean", "null"]},
+        "different_model": {"type": ["boolean", "null"]},
+        "notes": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "assessment_update": {
+      "type": "object",
+      "required": ["direction", "reason"],
+      "properties": {
+        "direction": {"enum": ["up", "down", "unchanged", "mixed"]},
+        "target": {"type": "string"},
+        "reason": {"type": "string"},
+        "calibrated_probability": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+      },
+      "additionalProperties": false
+    },
+    "review": {
+      "type": "object",
+      "properties": {
+        "reviewers": {"type": "array", "items": {"type": "string"}},
+        "disagreements": {"type": "array", "items": {"type": "string"}},
+        "accepted": {"type": ["boolean", "null"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
